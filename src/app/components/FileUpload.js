@@ -16,7 +16,6 @@ export default function FileUpload() {
 		try {
 			await Promise.all(
 				files.map(async (file, index) => {
-					console.log(file);
 					const data = new FormData();
 					data.append("file", file.data);
 					data.append("upload_preset", "my-uploads");
@@ -34,16 +33,20 @@ export default function FileUpload() {
 									newProgress[index] = percentCompleted;
 									return newProgress;
 								});
-								console.log(
-									`File ${file.name} upload is ${percentCompleted}% complete.`
-								);
 							},
 						}
 					);
 					if (res.status !== 200) throw new Error(res.statusText);
 				})
 			);
+			setFiles([]);
+			setUploadProgress([]);
+			setIsUploading(false);
+			alert("All files uploaded. Thank you!");
 		} catch (error) {
+			alert(
+				"Something went wrong! \nIf you see this please text Jesse Leegwater at +1(925)270-5512"
+			);
 			if (error.response) {
 				// The request was made and the server responded with a status code
 				// that falls out of the range of 2xx
@@ -59,7 +62,6 @@ export default function FileUpload() {
 			}
 			console.log(error.config);
 		}
-		setIsUploading(false);
 	};
 
 	const onFileChange = (e) => {
@@ -70,10 +72,6 @@ export default function FileUpload() {
 			data: file,
 		}));
 		setFiles(filesArray);
-		console.log(
-			"🚀 ~ file: FileUpload.js:115 ~ onFileChange ~ filesArray:",
-			filesArray
-		);
 		setUploadProgress(new Array(filesArray.length).fill(0));
 	};
 
@@ -92,23 +90,25 @@ export default function FileUpload() {
 						Upload Your Pictures and Videos of the Wedding
 					</h2>
 				</div>
-				<form onSubmit={onSubmit} className="mt-8 space-y-6">
-					<input
-						type="file"
-						name="file"
-						multiple
-						onChange={onFileChange}
-						className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-500 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-700"
-					/>
-					{files.length > 0 && (
-						<button
-							type="submit"
-							className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-						>
-							Upload
-						</button>
-					)}
-				</form>
+				{!isUploading && (
+					<form onSubmit={onSubmit} className="mt-8 space-y-6">
+						<input
+							type="file"
+							name="file"
+							multiple
+							onChange={onFileChange}
+							className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-500 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-700"
+						/>
+						{files.length > 0 && (
+							<button
+								type="submit"
+								className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+							>
+								Upload
+							</button>
+						)}
+					</form>
+				)}
 				<ul>
 					{files.map((file, index) => (
 						<li key={file.name} className="mt-4 relative">
@@ -130,12 +130,14 @@ export default function FileUpload() {
 									className="rounded h"
 								/>
 							)}
-							<button
-								onClick={() => deleteFile(index)}
-								className="absolute right-0 top-0 bg-red-500 text-white rounded-full w-5 h-5"
-							>
-								X
-							</button>
+							{!isUploading && (
+								<button
+									onClick={() => deleteFile(index)}
+									className="absolute right-0 top-0 bg-red-500 text-white rounded-full w-5 h-5"
+								>
+									X
+								</button>
+							)}
 							<div className="relative pt-1">
 								<div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-pink-200">
 									<div
@@ -154,7 +156,9 @@ export default function FileUpload() {
 			</div>
 			{isUploading && (
 				<div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50">
-					<div className="text-white text-2xl">Uploading...</div>
+					<div className="bg-white text-black text-2xl rounded-full px-4 py-2">
+						Uploading...
+					</div>
 				</div>
 			)}
 		</div>
