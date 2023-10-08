@@ -108,64 +108,49 @@ export default function FileUpload() {
 							Upload
 						</button>
 					)}
-					<ul>
-						{files.map((file, index) =>
-							file.type.startsWith("video") ? (
-								<li key={file.name} className="mt-4 relative">
+				</form>
+				<ul>
+					{files.map((file, index) => (
+						<li key={file.name} className="mt-4 relative">
+							{file.type.startsWith("video") ? (
+								<>
 									<div className="border border-white rounded px-3 py-3 w-16 h-16 flex items-center justify-center bg-gray-700 text-white text-sm font-bold text-center m-1">
 										{file.name.split(".").pop()}
 									</div>
 									<p className="mt-2 text-sm text-gray-500">{file.name}</p>
-									<button
-										onClick={() => deleteFile(index)}
-										className="absolute right-0 top-0 bg-red-500 text-white rounded-full w-5 h-5"
-									>
-										X
-									</button>
-
-									<div className="relative pt-1">
-										<div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-pink-200">
-											<div
-												style={{ width: `${uploadProgress[index]}%` }}
-												className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-pink-500"
-											></div>
-										</div>
-									</div>
-								</li>
+								</>
 							) : (
-								<li key={index} className="mt-4 relative">
-									<Image
-										src={file.url}
-										alt="Preview"
-										width="0"
-										height="0"
-										sizes="100vw"
-										style={{ width: "100%", height: "auto" }}
-										className="rounded h"
-									/>
-									<button
-										onClick={() => deleteFile(index)}
-										className="absolute right-0 top-0 bg-red-500 text-white rounded-full w-5 h-5"
-									>
-										X
-									</button>
-									<div className="relative pt-1">
-										<div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-pink-200">
-											<div
-												style={{ width: `${uploadProgress[index]}%` }}
-												className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center  ${
-													uploadProgress[index] === 100
-														? "bg-green-500"
-														: "bg-pink-500"
-												}`}
-											></div>
-										</div>
-									</div>
-								</li>
-							)
-						)}
-					</ul>
-				</form>
+								<Image
+									src={file.url}
+									alt="Preview"
+									width="0"
+									height="0"
+									sizes="100vw"
+									style={{ width: "100%", height: "auto" }}
+									className="rounded h"
+								/>
+							)}
+							<button
+								onClick={() => deleteFile(index)}
+								className="absolute right-0 top-0 bg-red-500 text-white rounded-full w-5 h-5"
+							>
+								X
+							</button>
+							<div className="relative pt-1">
+								<div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-pink-200">
+									<div
+										style={{ width: `${uploadProgress[index]}%` }}
+										className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center  ${
+											uploadProgress[index] === 100
+												? "bg-green-500"
+												: "bg-pink-500"
+										}`}
+									></div>
+								</div>
+							</div>
+						</li>
+					))}
+				</ul>
 			</div>
 			{isUploading && (
 				<div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50">
