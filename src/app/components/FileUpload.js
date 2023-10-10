@@ -60,7 +60,8 @@ export default function FileUpload() {
 		} catch (error) {
 			setIsUploading(false);
 			alert(
-				"Something went wrong! If your device went to sleep or you accidentally closed the website, please try uploading the files again. \nIf you continue to see this message, please text Jesse Leegwater at +1(925)270-5512"
+				"Something went wrong! If your device went to sleep or you accidentally closed the website, please try uploading the files again. \nIf you continue to see this message, please text Jesse Leegwater at +1(925)270-5512" +
+					`\n Error code: ${error.message}`
 			);
 		}
 	};
