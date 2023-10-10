@@ -7,6 +7,42 @@ export default function FileUpload() {
 	const [files, setFiles] = useState([]);
 	const [uploadProgress, setUploadProgress] = useState([]);
 	const [isUploading, setIsUploading] = useState(false);
+	const MAX_RETRIES = 3;
+	const RETRY_DELAY = 1000; // in milliseconds
+
+	const uploadFileWithRetry = async (file, index, retryCount = 0) => {
+		try {
+			const data = new FormData();
+			data.append("file", file.data);
+			data.append("upload_preset", "my-uploads");
+
+			const res = await axios.post(
+				"https://api.cloudinary.com/v1_1/dvnmpxoyj/auto/upload",
+				data,
+				{
+					onUploadProgress: (progressEvent) => {
+						let percentCompleted = Math.round(
+							(progressEvent.loaded * 100) / progressEvent.total
+						);
+						setUploadProgress((prevProgress) => {
+							let newProgress = [...prevProgress];
+							newProgress[index] = percentCompleted;
+							return newProgress;
+						});
+					},
+				}
+			);
+			if (res.status !== 200) throw new Error(res.statusText);
+		} catch (error) {
+			if (retryCount < MAX_RETRIES) {
+				// Wait for a while before retrying.
+				await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+				await uploadFileWithRetry(file, index, retryCount + 1);
+			} else {
+				throw error;
+			}
+		}
+	};
 
 	const onSubmit = async (e) => {
 		e.preventDefault();
@@ -15,52 +51,17 @@ export default function FileUpload() {
 
 		try {
 			await Promise.all(
-				files.map(async (file, index) => {
-					const data = new FormData();
-					data.append("file", file.data);
-					data.append("upload_preset", "my-uploads");
-
-					const res = await axios.post(
-						"https://api.cloudinary.com/v1_1/dvnmpxoyj/auto/upload",
-						data,
-						{
-							onUploadProgress: (progressEvent) => {
-								const percentCompleted = Math.round(
-									(progressEvent.loaded * 100) / progressEvent.total
-								);
-								setUploadProgress((prevProgress) => {
-									const newProgress = [...prevProgress];
-									newProgress[index] = percentCompleted;
-									return newProgress;
-								});
-							},
-						}
-					);
-					if (res.status !== 200) throw new Error(res.statusText);
-				})
+				files.map((file, index) => uploadFileWithRetry(file, index))
 			);
 			setFiles([]);
 			setUploadProgress([]);
 			setIsUploading(false);
 			alert("All files uploaded. Thank you!");
 		} catch (error) {
+			setIsUploading(false);
 			alert(
-				"Something went wrong! \nIf you see this please text Jesse Leegwater at +1(925)270-5512"
+				"Something went wrong! If your device went to sleep or you accidentally closed the website, please try uploading the files again. \nIf you continue to see this message, please text Jesse Leegwater at +1(925)270-5512"
 			);
-			if (error.response) {
-				// The request was made and the server responded with a status code
-				// that falls out of the range of 2xx
-				console.log(error.response.data);
-				console.log(error.response.status);
-				console.log(error.response.headers);
-			} else if (error.request) {
-				// The request was made but no response was received
-				console.log(error.request);
-			} else {
-				// Something happened in setting up the request that triggered an Error
-				console.log("Error", error.message);
-			}
-			console.log(error.config);
 		}
 	};
 
@@ -156,8 +157,9 @@ export default function FileUpload() {
 			</div>
 			{isUploading && (
 				<div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50">
-					<div className="bg-white text-black text-2xl rounded-full px-4 py-2">
+					<div className="bg-white text-black text-2xl rounded-full text-center px-4 py-2">
 						Uploading...
+						<br /> Please keep your device awake!
 					</div>
 				</div>
 			)}
