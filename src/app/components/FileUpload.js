@@ -7,13 +7,9 @@ export default function FileUpload() {
 	const [files, setFiles] = useState([]);
 	const [uploadProgress, setUploadProgress] = useState([]);
 	const [isUploading, setIsUploading] = useState(false);
-	const [shouldResume, setShouldResume] = useState(false);
 
 	const uploadFiles = async () => {
 		try {
-			shouldResumeUpload = false;
-
-			console.log("start upload");
 			await Promise.all(
 				files.map(async (file, index) => {
 					const headers = {
