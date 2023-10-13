@@ -7,63 +7,66 @@ export default function FileUpload() {
 	const [files, setFiles] = useState([]);
 	const [uploadProgress, setUploadProgress] = useState([]);
 	const [isUploading, setIsUploading] = useState(false);
-	const MAX_RETRIES = 3;
-	const RETRY_DELAY = 1000; // in milliseconds
+	const [shouldResume, setShouldResume] = useState(false);
 
-	const uploadFileWithRetry = async (file, index, retryCount = 0) => {
+	const uploadFiles = async () => {
 		try {
-			const data = new FormData();
-			data.append("file", file.data);
-			data.append("upload_preset", "my-uploads");
+			shouldResumeUpload = false;
 
-			const res = await axios.post(
-				"https://api.cloudinary.com/v1_1/dvnmpxoyj/auto/upload",
-				data,
-				{
-					onUploadProgress: (progressEvent) => {
-						let percentCompleted = Math.round(
-							(progressEvent.loaded * 100) / progressEvent.total
-						);
-						setUploadProgress((prevProgress) => {
-							let newProgress = [...prevProgress];
-							newProgress[index] = percentCompleted;
-							return newProgress;
-						});
-					},
-				}
-			);
-			if (res.status !== 200) throw new Error(res.statusText);
-		} catch (error) {
-			if (retryCount < MAX_RETRIES) {
-				// Wait for a while before retrying.
-				await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
-				await uploadFileWithRetry(file, index, retryCount + 1);
-			} else {
-				throw error;
-			}
-		}
-	};
-
-	const onSubmit = async (e) => {
-		e.preventDefault();
-		if (files.length === 0) return;
-		setIsUploading(true);
-
-		try {
+			console.log("start upload");
 			await Promise.all(
-				files.map((file, index) => uploadFileWithRetry(file, index))
+				files.map(async (file, index) => {
+					const headers = {
+						Authorization:
+							"Bearer sl.Bn2Qi-y6E1vyQf4pudrgX1BJS4yDRdQaPAS_o5q5yNRFSftFLizVvLw5bqLP14CQGjJhsBCEXzo0fiQ6vdNx4kfgthloRR5Vhp3V372MUEeHP0rdrY6vhPwU6xRL31_4YdENqie89hYg",
+						"Content-Type": "application/octet-stream",
+						"Dropbox-API-Arg": JSON.stringify({
+							path: `/${file.data.name}`,
+						}),
+					};
+
+					await axios.post(
+						"https://content.dropboxapi.com/2/files/upload",
+						file.data,
+						{
+							headers,
+							onUploadProgress: (progressEvent) => {
+								let percentCompleted = Math.round(
+									(progressEvent.loaded * 100) / progressEvent.total
+								);
+								setUploadProgress((prevProgress) => {
+									let newProgress = [...prevProgress];
+									newProgress[index] = percentCompleted;
+									return newProgress;
+								});
+							},
+						}
+					);
+				})
 			);
+
 			setFiles([]);
 			setUploadProgress([]);
 			setIsUploading(false);
 			alert("All files uploaded. Thank you!");
 		} catch (error) {
 			setIsUploading(false);
+
 			alert(
 				"Something went wrong! If your device went to sleep or you accidentally closed the website, please try uploading the files again. \nIf you continue to see this message, please text Jesse Leegwater at +1(925)270-5512" +
 					`\n Error code: ${error.message}`
 			);
 		}
+	};
+
+	const onSubmit = async (e) => {
+		e.preventDefault();
+
+		if (files.length === 0) return;
+
+		setIsUploading(true);
+
+		await uploadFiles();
 	};
 
 	const onFileChange = (e) => {
